@@ -108,7 +108,6 @@ public class MyExtraCredit{
 		int newHeight = (int)(height/scale);
 
 		int newPix, imgX, imgY;
-		System.out.print(alias);
 		if(alias == 0 ){
 
 			for (int y=0; y<newHeight;y++){
@@ -149,11 +148,8 @@ public class MyExtraCredit{
 
 					newPix = (r << 16) | (g << 8) | b;
 					opImg.setRGB(x, y, newPix);
-					System.out.println(count);
-			
 				}
 			}
-			System.out.print("there");
 		}
 		
 		//opImg=img;
@@ -162,7 +158,7 @@ public class MyExtraCredit{
 		lbIm2.setIcon(new ImageIcon(opImg)); //Sets the image to be displayed as an icon
 		cRight.add(lbIm2);
 
-        frameRight.pack();
+        	frameRight.pack();
 		frameRight.setVisible(true);	
        };
         
