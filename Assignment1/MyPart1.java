@@ -94,7 +94,7 @@ public class MyPart1 {
 						int r = 0, g = 0, b = 0,count=0;
 						for (int i =-1; i<2; i++){
 							for (int j=-1; j<2; j++){
-								if((imgX+i)>=0 && (imgX+i)<width && (imgY+j)>=0 && (imgY+i)<height){
+								if((imgX+i)>=0 && (imgX+i)<width && (imgY+j)>=0 && (imgY+j)<height){
 									newPix = img.getRGB(imgX+i, imgY+j);
 									r += (newPix >> 16) & 0xff;
 									g += (newPix >> 8) & 0xff;
