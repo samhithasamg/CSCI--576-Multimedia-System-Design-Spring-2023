@@ -131,7 +131,7 @@ public class MyExtraCredit{
 					int r = 0, g = 0, b = 0,count=0;
 					for (int i =-1; i<2; i++){
 						for (int j=-1; j<2; j++){
-							if((imgX+i)>=0 && (imgX+i)<width && (imgY+j)>=0 && (imgY+i)<height){
+							if((imgX+i)>=0 && (imgX+i)<width && (imgY+j)>=0 && (imgY+j)<height){
 								newPix = copy.getRGB(imgX+i, imgY+j);
 								r += (newPix >> 16) & 0xff;
 								g += (newPix >> 8) & 0xff;
@@ -194,7 +194,7 @@ public class MyExtraCredit{
         cRight = frameRight.getContentPane();
 
 		
-        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
+        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
 
         scheduledExecutorService.scheduleAtFixedRate(createMain(), 0, 1000*1000000/60, TimeUnit.NANOSECONDS);
         scheduledExecutorService.scheduleAtFixedRate(createOp(), 0, 1000*1000000/fps, TimeUnit.NANOSECONDS);
