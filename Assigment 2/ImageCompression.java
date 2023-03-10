@@ -7,7 +7,7 @@ import java.io.*;
 import javax.swing.*;
 import java.util.List;
 
-public class  GetImage{
+public class  ImageCompression{
 
     
 	JFrame frame;
@@ -264,7 +264,7 @@ public class  GetImage{
     public static void main(String[] args) throws Exception {
     //FileWriter writer = new FileWraiter("./image1-onechannel.rgb");
 
-        GetImage res = new GetImage();
+        ImageCompression res = new ImageCompression();
         res.showImg(args);
 
     }
