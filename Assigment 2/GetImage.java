@@ -1,9 +1,11 @@
 import java.io.File;
+import java.util.*;
 
 import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
 import javax.swing.*;
+import java.util.List;
 
 public class  GetImage{
 
@@ -14,13 +16,153 @@ public class  GetImage{
 	BufferedImage img;
 	int width = 352;
 	int height = 288;
+	int n;
+	int m;
 
+	public void addToMap(Map<int[],List<int[]>> vectors, int[] codevector,int x, int y){
+		
+		for(int[] array: vectors.keySet()){
+			if(Arrays.equals(codevector,array)){
+				vectors.get(array).add(new int[]{x,y});
+				return;
+			}
+		}
+		vectors.put(codevector,new ArrayList<int[]>(Arrays.asList(new int[]{x,y})));
+	}
+	public Double calculateDistance(int[] point1, int[] point2){
+		 
+		Double dist = 0.0;
+		for( int i=0; i<point1.length; i++){
 
+			dist+=Math.pow((point1[i]-point2[i]),2);
+		}
+
+		return dist;
+	}
+
+	public int findClosestCentroid(int[] point,List<int[]> centroids){
+
+		Double minDistance = Double.MAX_VALUE;
+		int closestCenter= -1;
+
+		for(int l=0; l<n; l++){
+			
+			Double dist = calculateDistance(centroids.get(l),point);
+
+			if(dist<minDistance){
+				
+				closestCenter = l;
+				minDistance = dist;
+			}
+		}
+
+		return closestCenter;
+	}
+
+	public void calculateNewCentroids(int[] cluster, List<int[]> keysArray,List<int[]> centroids){
+
+		for(int i=0; i< centroids.size();i++){
+
+			int count=0;
+			int[] sum= new int[m];
+			for(int j=0; j<cluster.length; j++){
+				
+				if(cluster[j]==i){
+
+					for(int k=0;k<m;k++){
+						sum[k]+=keysArray.get(j)[k];
+					}
+
+					count++;
+				}
+			}
+			if(count!=0){
+				for(int k=0;k<m;k++){
+					centroids.get(i)[k]=sum[k]/count;
+				}
+			}
+		}
+
+	}
+
+	public List<int[]> KmeansForCompression(Map<int[],List<int[]>> vectors, int[] cluster){
+
+		 //Making n centroids choosing random points
+		List<int[]> keysArray = new ArrayList<int[]>(vectors.keySet());
+		List<int[]> centroids = new ArrayList<>();
+		for( int i=0; i<n; i++){
+			Random random = new Random();
+			centroids.add(keysArray.get(random.nextInt(keysArray.size())));
+		}
+
+		// int[] cluster = new int[keysArray.size()];
+		boolean stop = false;
+		
+		int iterations =0;
+
+		while(!stop){
+
+			iterations++;
+			boolean changeCenter = false;
+			for(int i=0; i<keysArray.size();i++){
+				
+				int center = findClosestCentroid(keysArray.get(i), centroids);
+				if(center!=cluster[i]){
+					cluster[i]= center;
+					changeCenter=true;
+				}
+
+			}
+
+			calculateNewCentroids(cluster,keysArray,centroids);
+
+			if(changeCenter==false || iterations>500){
+				stop = true;
+			}
+
+			//System.out.println(iterations);
+
+		}
+		
+		return centroids;
+	}
+
+	public BufferedImage decompressImage(BufferedImage img, int[] cluster, List<int[]> centriods, Map<int[],List<int[]>> vectors){
+
+		BufferedImage deCompressedImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB); 
+		
+		int i=0;
+		
+		for(int[] key: vectors.keySet()){
+
+			List<int[]> values = vectors.get(key);
+			int[] pixels = centriods.get(cluster[i]);
+			for(int[] value: values){
+
+				byte r,g,b;
+				for(int j=0;j<m;j++){
+					
+					//System.out.println(pixels[j]);
+					r = (byte)pixels[j];
+					g=r; b=r;
+					int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+					deCompressedImg.setRGB(value[0]+j,value[1],pix);
+
+				}
+			}
+
+			i++;
+			
+		}
+
+		return deCompressedImg;
+
+	}
     public void showImg(String[] args) throws Exception{
 
         String filenameString= args[0];
-        int m = Integer.parseInt(args[1]);
-        int n = Integer.parseInt(args[2]);
+        m = Integer.parseInt(args[1]);
+        n = Integer.parseInt(args[2]);
 
         System.out.println("file: "+filenameString);
         System.out.println("m: "+m);
@@ -47,8 +189,36 @@ public class  GetImage{
 			}
 		}
 
+		Map<int[],List<int[]>> vectors =  new HashMap<int[], List<int[]>>();
+
+        ind=0;
+        for(int y = 0; y < height; y++){
+
+            for(int x = 0; x < width; x=x+m){
+				int r,g,b;
+				int[] codevector = new int[m];
+				for( int i =0; i<m; i++){
+					
+					int pix = img.getRGB(x+i, y);
+					r = (pix >> 16) & 0xff;
+
+					codevector[i]=r;
+				}
+
+				addToMap(vectors,codevector,x,y);
+		
+            }
+        }
+
+		int[] cluster = new int[vectors.size()];
+		List<int[]> centroids = KmeansForCompression(vectors,cluster);
 
 
+		BufferedImage decompressedImg; 
+      
+		decompressedImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		decompressedImg = decompressImage(img,cluster,centroids,vectors);
+		
 		// Use labels to display the images
 		frame = new JFrame();
 		GridBagLayout gLayout = new GridBagLayout();
@@ -59,7 +229,7 @@ public class  GetImage{
 		JLabel lbText2 = new JLabel("Image after modification (Right)");
 		lbText2.setHorizontalAlignment(SwingConstants.CENTER);
 		lbIm1 = new JLabel(new ImageIcon(img));
-		lbIm2 = new JLabel(new ImageIcon(img));
+		lbIm2 = new JLabel(new ImageIcon(decompressedImg));
 
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -89,14 +259,14 @@ public class  GetImage{
 		frame.pack();
 		frame.setVisible(true);
 
-
     }
 
     public static void main(String[] args) throws Exception {
-    //FileWriter writer = new FileWriter("./image1-onechannel.rgb");
+    //FileWriter writer = new FileWraiter("./image1-onechannel.rgb");
 
         GetImage res = new GetImage();
         res.showImg(args);
+
     }
     
 }
