@@ -4,10 +4,11 @@ import java.util.*;
 import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
+
 import javax.swing.*;
 import java.util.List;
 
-public class  ImageCompression{
+public class  ExtraCredit{
 
     
 	JFrame frame;
@@ -37,7 +38,7 @@ public class  ImageCompression{
 			dist+=Math.pow((point1[i]-point2[i]),2);
 		}
 
-		return dist;
+		return Math.sqrt(dist);
 	}
 
 	public int findClosestCentroid(int[] point,List<int[]> centroids){
@@ -77,18 +78,19 @@ public class  ImageCompression{
 				}
 			}
 			if(count!=0){
-
+				
 				for(int k=0;k<m;k++){
 					sum[k]= sum[k]/count;
 				}
 				centroids.set(i,sum);
-				
+
 			}
 			else{
-				
+
 				Random random = new Random();
 				int[] cen = keysArray.get(random.nextInt(keysArray.size()));
 				centroids.set(i,cen);
+				
 			}
 		}
 
@@ -99,19 +101,20 @@ public class  ImageCompression{
 		 //Making n centroids choosing random points
 		List<int[]> keysArray = new ArrayList<int[]>(vectors.keySet());
 		List<int[]> centroids = new ArrayList<>();
+		Random random = new Random();
 		for( int i=0; i<n; i++){
-			Random random = new Random();
+			
 			centroids.add(keysArray.get(random.nextInt(keysArray.size())));
 		}
 
-		// int[] cluster = new int[keysArray.size()];
 		boolean stop = false;
 		
-		int iterations =0;
+		int iterations = 0;
 
 		while(!stop){
 
 			iterations++;
+			//System.out.println(iterations);
 			boolean changeCenter = false;
 			for(int i=0; i<keysArray.size();i++){
 				
@@ -128,8 +131,6 @@ public class  ImageCompression{
 			if(changeCenter==false || iterations>500){
 				stop = true;
 			}
-
-			//System.out.println(iterations);
 
 		}
 		
@@ -149,13 +150,18 @@ public class  ImageCompression{
 			for(int[] value: values){
 
 				byte r,g,b;
-				for(int j=0;j<m;j++){
-					
-					//System.out.println(pixels[j]);
-					r = (byte)pixels[j];
-					g=r; b=r;
-					int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
-					deCompressedImg.setRGB(value[0]+j,value[1],pix);
+				int ind=0;
+				for(int j=0;j<Math.sqrt(m);j++){
+
+					for(int k=0; k<Math.sqrt(m);k++){
+
+						r = (byte)pixels[ind];
+						g=r; b=r;
+						int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+						deCompressedImg.setRGB(value[0]+k,value[1]+j,pix);
+
+						ind++;
+					}
 
 				}
 			}
@@ -200,25 +206,27 @@ public class  ImageCompression{
 
 		Map<int[],List<int[]>> vectors =  new HashMap<int[], List<int[]>>();
 
-        ind=0;
-        for(int y = 0; y < height; y++){
+       
+        for(int y = 0; y < height-Math.sqrt(m); y+=Math.sqrt(m)){
 
-            for(int x = 0; x < width; x=x+m){
-				int r,g,b;
+            for(int x = 0; x < width-Math.sqrt(m); x+=Math.sqrt(m)){
+				int r;
 				int[] codevector = new int[m];
-				for( int i =0; i<m; i++){
-					
-					int pix = img.getRGB(x+i, y);
-					r = (pix >> 16) & 0xff;
-
-					codevector[i]=r;
+				ind=0;
+				for( int i =0; i<Math.sqrt(m); i++){
+					for (int j=0; j<Math.sqrt(m); j++){
+						int pix = img.getRGB(x+j, y+i);
+						r = (pix >> 16) & 0xff;
+						codevector[ind++]=r;
+					}
 				}
 
 				addToMap(vectors,codevector,x,y);
 		
             }
         }
-
+		System.out.println(vectors.size());
+		
 		int[] cluster = new int[vectors.size()];
 		List<int[]> centroids = KmeansForCompression(vectors,cluster);
 
@@ -273,7 +281,7 @@ public class  ImageCompression{
     public static void main(String[] args) throws Exception {
     //FileWriter writer = new FileWraiter("./image1-onechannel.rgb");
 
-        ImageCompression res = new ImageCompression();
+		ExtraCredit res = new ExtraCredit();
         res.showImg(args);
 
     }
